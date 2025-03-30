@@ -1,3 +1,4 @@
+import datetime
 import time
 
 class Environment:
@@ -24,3 +25,18 @@ class Environment:
 
     def GetLongUtcTimeStamp(self):
         return int((time.time() + self.offsetTimeInSeconds) * 1000) 
+
+    def GetTimeToLog(self):
+        fecha_legible = datetime.datetime.now()
+        formato_hora = fecha_legible.strftime('%H:%M:%S')
+        milisegundos = fecha_legible.microsecond // 1000
+        return f"{formato_hora}.{milisegundos:03d}"    
+    
+    def SetPriceStatus(self):
+        self.lastPriceTick = self.GetLongUtcTimeStamp()
+
+    def PriceStreamIsWorking(self):
+        return self.GetLongUtcTimeStamp() - self.lastPriceTick < 1000
+    
+    def Log(self, msg):
+        print(f"{self.GetTimeToLog()} {msg}")

@@ -9,29 +9,24 @@ import hashlib
 class AccountStream:
     def __init__(self, environment):
         self.environment = environment
-        self.listenKey = self.CreteUserListenKey()
         self.WalletSpot = {}
-        threading.Thread(target=self.KeepAliveListenKey).start()
+        self.LastLogError = 0
         
-
-    def CreteUserListenKey(self):
-        url = self.environment.apiUrl + "/api/v3/userDataStream"
-        headers = {
-            'X-MBX-APIKEY': self.environment.apiKey
-        }
-        response = requests.post(url, headers=headers)
-        return response.json()['listenKey']
-    
-    def KeepAliveListenKey(self):
-        while True:
-            time.sleep(30*60)
-            url = self.environment.apiUrl + "/api/v3/userDataStream"
-            headers = {
-                'X-MBX-APIKEY': self.environment.apiKey
-            }
-            requests.put(url+"?listenKey="+self.listenKey, headers=headers)
-
     def GetWalletBalance(self):
+        success = False
+        while(not success):
+            try:
+                self.UpdateWallet()
+                success = True
+            except:
+                success = False
+                time.sleep(1)
+                current = self.environment.GetLongUtcTimeStamp()
+                if(current - self.LastLogError > 20000):
+                    self.environment.Log("Error al intentar actualizar la billetera")
+                    self.LastLogError = current
+
+    def UpdateWallet(self):
         url = self.environment.apiUrl + "/api/v3/account"
         params = {
             'timestamp': self.environment.GetLongUtcTimeStamp()
@@ -49,27 +44,4 @@ class AccountStream:
         response = requests.get(url +'?'+ query_string, headers=headers)
         balances = response.json()["balances"]
         self.WalletSpot = {balance['asset']: float(balance['free']) for balance in balances}
-
-    def run(self):
-         self.GetWalletBalance()  # Obtiene el saldo inicial
-         threading.Thread(target=self.start_websocket).start()
-     
-    def start_websocket(self):
-         ws_url = self.environment.socketUrl + "/ws/"+ self.listenKey
-         ws = websocket.WebSocketApp(ws_url,
-                                     on_message=self.on_message,
-                                     on_error=self.on_error)
-         ws.run_forever()
-         self.KeepAliveListenKey()
-
-     
-    def on_message(self, ws, message):
-         event = json.loads(message)
-         if(event["e"] == "balanceUpdate"):
-            self.GetWalletBalance()
-     
-    def on_error(self, ws, error):
-         print("Error:", error)
-
-    
     

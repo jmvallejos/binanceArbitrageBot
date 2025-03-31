@@ -1,0 +1,33 @@
+Deuda tecnica
+
+Manejo de la billetera.
+	Cuando inicia el sistema 
+		Me traigo todas las monedas que tengo en cartera.
+		Me traigo su par con el stable coin, y su minimo operable.
+		Vendo a mercado todas las monedas distintas al stable coin cuya cantidad supere el minimo.
+		Convierto a USDC todas los restantes de moneda.
+		Si alguno da error de minimo, compro el minimo a mercado y luego convierto a usdc.
+
+	Cuando se completa un ciclo.
+		Me traigo todas las monedas que tengo en cartera.
+		Me traigo su par con el stable coin, y su minimo operable.
+		Vendo a mercado todas las monedas distintas al stable coin cuya cantidad supere el minimo.
+		Convierto a USDC todas los restantes de moneda.
+		Si alguno da error de minimo, compro el minimo a mercado y luego convierto a usdc.
+
+	Cuando todo el capital se va a una coin y hay que comenzar a arbitrar ese coin en especifico.
+		Me traigo todas las monedas que tengo en cartera. Menos la que hay que empezar a arbitrar
+		Me guardo el saldo de USDC que tengo en ese momento.
+		Me traigo su par con el stable coin, y su minimo operable.
+		Vendo a mercado todas las monedas distintas al stable coin cuya cantidad supere el minimo.
+		Convierto a USDC todas los restantes de moneda.
+		Si alguno da error de minimo, compro el minimo a mercado y luego convierto a usdc.
+		Le resto al capital invertido del arbitraje, la diferencia entre el valor actual de usdc y el valor que tenia al momento de iniciar el proceso.
+
+Implementar FIX api para obtener los ticks y cargar ordenes.
+
+Investigar sobre aws:
+	Deploys automaticos.
+	AMIs
+	Instancias spots
+	Mejoras de red.

@@ -7,9 +7,8 @@ from decimal import Decimal, ROUND_FLOOR
 
 
 class MarketOperator():
-    def __init__(self, walletSpot, environment):
+    def __init__(self, environment):
         super().__init__()
-        self.walletSpot = walletSpot
         self.environment = environment
         
     def DirectOperation(self, pairTriangle):
@@ -73,7 +72,7 @@ class MarketOperator():
         self.environment.Log("Se completo correctamente el DirectOperation")
         self.environment.Log("Dinero invertido: " + str(totalInvested))
         self.environment.Log("Dinero ganado: " + str(thirdStep["cummulativeQuoteQty"]))
-        self.environment.Log("Diferencia: " + str(thirdStep["cummulativeQuoteQty"] - totalInvested))
+        self.environment.Log("Diferencia: " + str(float(thirdStep["cummulativeQuoteQty"]) - totalInvested))
         
         return {"coinToReProcess": "", "investedCapital": 0.00} #TESTED
 
@@ -136,7 +135,7 @@ class MarketOperator():
         self.environment.Log("Se completo correctamente el IndirectOperation")
         self.environment.Log("Dinero invertido: " + str(totalInvested))
         self.environment.Log("Dinero ganado: " + str(thirdStep["cummulativeQuoteQty"]))
-        self.environment.Log("Diferencia: " + str(thirdStep["cummulativeQuoteQty"] - totalInvested))
+        self.environment.Log("Diferencia: " + str(float(thirdStep["cummulativeQuoteQty"]) - totalInvested))
 
 
         return {"coinToReProcess": ""} #Tested
@@ -161,7 +160,7 @@ class MarketOperator():
         self.environment.Log("Se vendio al stable coin")
         self.environment.Log("Invertido: " + str(invested + commi))
         self.environment.Log("Ganado: " + str(response["cummulativeQuoteQty"]))
-        self.environment.Log("Diferencia: " + str(response["cummulativeQuoteQty"] - (invested + commi)))
+        self.environment.Log("Diferencia: " + str(float(response["cummulativeQuoteQty"]) - (invested + commi)))
         return {"status": "SUCCESS"} #TESTED
     
     def DirectOperationTwoSteps(self, row, initialBalance):
@@ -208,7 +207,7 @@ class MarketOperator():
         totalInvested = row["investedCapital"] + row["commiSecondStepDirect"] + row["commiThirdStepDirect"] 
         self.environment.Log("Dinero invertido: " + str(totalInvested))
         self.environment.Log("Dinero ganado: " + str(thirdStep["cummulativeQuoteQty"]))
-        self.environment.Log("Diferencia: " + str(thirdStep["cummulativeQuoteQty"] - totalInvested))
+        self.environment.Log("Diferencia: " + str(float(thirdStep["cummulativeQuoteQty"]) - totalInvested))
 
         return {
             "coinToReProcess": "", 
@@ -259,19 +258,33 @@ class MarketOperator():
         totalInvested = row["investedCapital"] + row["commiSecondStepIndirect"] + row["commiThirdStepIndirect"] 
         self.environment.Log("Dinero invertido: " + str(totalInvested))
         self.environment.Log("Dinero ganado: " + str(thirdStep["cummulativeQuoteQty"]))
-        self.environment.Log("Diferencia: " + str(thirdStep["cummulativeQuoteQty"] - totalInvested))
+        self.environment.Log("Diferencia: " + str(float(thirdStep["cummulativeQuoteQty"]) - totalInvested))
         
         return {
             "coinToReProcess": "", 
             "investedCapital": 0,
             "status": "SUCCESS"
         } #TESTED
+    
+    def SellToStableCoinMarket(self, symbol, quantity):
+        order = {
+            "symbol": symbol,
+            "side": "SELL",
+            "type": "MARKET",
+            "quantity": quantity,
+            "newClientOrderId": "SellToStableCoinMarket"
+        }
+
+        self.ExecuteOrder(order) #TESTED
         
+        return 
+
     def ExecuteOrder(self, order):
         endpoint = '/api/v3/order'
         order["timestamp"] = self.environment.GetLongUtcTimeStamp()
-        order["price"] = f"{order["price"]:.8f}"
-        order["quantity"] = f"{order["quantity"]:.8f}"
+        if("price" in order): 
+            order["price"] = f"{order["price"]:.8f}".rstrip('0').rstrip('.')
+        order["quantity"] = f"{order["quantity"]:.8f}".rstrip('0').rstrip('.')
         query_string = '&'.join([f"{key}={value}" for key, value in order.items()])
         order['signature'] = hmac.new(self.environment.secretKey.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
 

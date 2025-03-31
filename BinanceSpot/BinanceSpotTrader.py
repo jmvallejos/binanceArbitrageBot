@@ -16,10 +16,10 @@ class BinanceSpotTrader:
         self.AdTrianglePairs(tickerStream)
         tickerStream.InitConnection()
 
-        accountStream = AccountStream(environment)
-        accountStream.GetWalletBalance()
+        stableCoin = "USDC"
 
-        marketOperator = MarketOperator(accountStream.WalletSpot, environment)
+        marketOperator = MarketOperator(environment)
+        accountStream = AccountStream(environment, stableCoin, marketOperator)
         
         thereIsPrice = False
         df = tickerStream.dfPairs
@@ -27,7 +27,7 @@ class BinanceSpotTrader:
             thereIsPrice = not (df["ask1"].isnull().any() or df["ask2"].isnull().any() or df["ask3"].isnull().any())
 
         environment.Log("Se llenaron los precios. Inicio del arbitraje")
-        trinagularArbitrage = TriangularArbitrage(environment, tickerStream.dfPairs, marketOperator, accountStream, "USDC", 0.1)
+        trinagularArbitrage = TriangularArbitrage(environment, tickerStream.dfPairs, marketOperator, accountStream, stableCoin, -0.2)
         trinagularArbitrage.InitArbitrage()
 
     def AdTrianglePairs(self, tickerStream):
@@ -63,11 +63,11 @@ class BinanceSpotTrader:
         ############
 
         #XRP
-        tickerStream.addTrianglePair("XRPUSDC","XRPETH", "ETHUSDC","USDC", "XRP","ETH", 0.0007125, 0.00075, 0.0007125 )
-        tickerStream.addTrianglePair("XRPUSDC","XRPBTC", "BTCUSDC","USDC", "XRP","BTC", 0.0007125, 0.00075, 0.0007125 )
+        #tickerStream.addTrianglePair("XRPUSDC","XRPETH", "ETHUSDC","USDC", "XRP","ETH", 0.0007125, 0.00075, 0.0007125 )
+        #tickerStream.addTrianglePair("XRPUSDC","XRPBTC", "BTCUSDC","USDC", "XRP","BTC", 0.0007125, 0.00075, 0.0007125 )
 
         #DOGE
-        tickerStream.addTrianglePair("DOGEUSDC","DOGEBTC", "BTCUSDC","USDC", "DOGE","ETH", 0.0007125, 0.00075, 0.0007125 )
+        tickerStream.addTrianglePair("DOGEUSDC","DOGEBTC", "BTCUSDC","USDC", "DOGE","BTC", 0.0007125, 0.00075, 0.0007125 )
        
         #NEAR
         tickerStream.addTrianglePair("NEARUSDC","NEARETH", "ETHUSDC","USDC", "NEAR","ETH", 0.0007125, 0.00075, 0.0007125 )

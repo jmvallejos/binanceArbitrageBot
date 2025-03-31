@@ -116,8 +116,7 @@ class TickerStream():
         for symbol_info in data["symbols"]:
             symbol = symbol_info["symbol"]
             loteSize = symbol_info["filters"][1]["stepSize"]
-            loteSize = float(loteSize)
-            loteSize = str(loteSize)
+            loteSize = loteSize.rstrip('0').rstrip('.')
             precision = 0
             if("-" in loteSize):
                 precision = int(loteSize.split('-')[1])

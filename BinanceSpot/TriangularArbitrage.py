@@ -133,7 +133,8 @@ class TriangularArbitrage():
         
     def ReprocessCoin(self):
         reprocessEnd = False
-        self.accountStream.GetWalletBalance()
+        self.accountStream.GetWalletBalance(self.coinToReprocess)
+        self.reprocessGain -= self.accountStream.diffAmountAfterConversions
         self.balanceCoinToReprocess = self.accountStream.WalletSpot[self.coinToReprocess]
 
         while(not reprocessEnd):
@@ -187,7 +188,8 @@ class TriangularArbitrage():
 
             self.coinToReprocess = response["coinToReProcess"]
             self.reprocessGain = response["investedCapital"]
-            self.accountStream.GetWalletBalance()
+            self.accountStream.GetWalletBalance(self.coinToReprocess)
+            self.reprocessGain -= self.accountStream.diffAmountAfterConversions
             self.balanceCoinToReprocess = self.accountStream.WalletSpot[self.coinToReprocess] 
 
             return False
@@ -203,7 +205,8 @@ class TriangularArbitrage():
             
             self.coinToReprocess = response["coinToReProcess"]
             self.reprocessGain = response["investedCapital"]
-            self.accountStream.GetWalletBalance()
+            self.accountStream.GetWalletBalance(self.coinToReprocess)
+            self.reprocessGain -= self.accountStream.diffAmountAfterConversions
             self.balanceCoinToReprocess = self.accountStream.WalletSpot[self.coinToReprocess] 
             
             return False

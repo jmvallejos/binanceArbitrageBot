@@ -8,8 +8,11 @@ if __name__ == "__main__":
     environment = Environment()
     environment.SetProdValues()
 
-    marketOperator = MarketOperator(environment)
-    accountStream = AccountStream(environment, "USDC", marketOperator)
-    accountStream.GetWalletBalance()
+    tickerStream = TickerStream(environment)
+    tickerStream.addTrianglePair("ETHUSDC", "ETHBTC", "BTCUSDC","USDC", "ETH", "BTC", 0.0007125, 0.00075, 0.0071250)
 
+    tickerStream.InitConnection()
+
+    while True:
+        a = 1
     

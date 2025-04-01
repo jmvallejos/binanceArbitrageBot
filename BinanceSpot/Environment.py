@@ -8,6 +8,7 @@ class Environment:
         self.secretKey = ''
         self.apiUrl = ''
         self.socketUrl = ''
+        self.fixUrl = ''
 
     def SetDevValues(self):
         self.offsetTimeInSeconds = 0
@@ -22,6 +23,8 @@ class Environment:
         self.secretKey = 'yFFwhXtBNvib9Jms1lm0ruxLpjL1kUqKwz7mehBgTWOkRRpzX2YtalTJ1rfL30sP'
         self.apiUrl = 'https://api.binance.com'
         self.socketUrl = 'wss://stream.binance.com:9443'
+        self.fixOrdersUrl = 'tcp+tls://fix-oe.binance.com:9000'
+        self.fixMarketDataUrl = 'tcp+tls://fix-md.binance.com:9000'
 
     def GetLongUtcTimeStamp(self):
         return int((time.time() + self.offsetTimeInSeconds) * 1000) 

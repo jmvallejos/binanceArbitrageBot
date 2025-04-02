@@ -1,14 +1,12 @@
 import threading
 import time
-import winsound
 import requests
 import websocket
 import json
-from functools import partial
 import pandas as pd
 pd.options.mode.chained_assignment = None 
 
-class TickerStream():
+class TickerStreamIndividualTick():
     def __init__(self, environment):
         super().__init__()
         self.environment = environment
@@ -75,8 +73,8 @@ class TickerStream():
         df.loc[df['pair3'] == symbol, ['ask3', 'askq3', 'bid3', 'bidq3']] = ask, askq, bid, bidq
 
         self.environment.SetPriceStatus()
-        #if(data["s"] == "BTCUSDC"):
-         #   print(data["a"] + ' '+ data["A"])
+        if(data["s"] == "BTCUSDC"):
+            print(data["a"])
 
     def OnError(self, error, c):
         threading.Thread(target = self.RunSocket).start()

@@ -60,6 +60,9 @@ class TickerStreamIndividualTick():
     def OnTick(self, ws, message):
         data = json.loads(message)["data"]
 
+        if(data["s"] == "BTCUSDC"):
+            print(data["a"])
+
         symbol = data["s"]
         ask = float(data["a"])
         bid = float(data["b"])
@@ -73,8 +76,7 @@ class TickerStreamIndividualTick():
         df.loc[df['pair3'] == symbol, ['ask3', 'askq3', 'bid3', 'bidq3']] = ask, askq, bid, bidq
 
         self.environment.SetPriceStatus()
-        if(data["s"] == "BTCUSDC"):
-            print(data["a"])
+        
 
     def OnError(self, error, c):
         threading.Thread(target = self.RunSocket).start()

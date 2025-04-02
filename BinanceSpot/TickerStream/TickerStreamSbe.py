@@ -62,23 +62,25 @@ class TickerStreamSbe():
         ws.run_forever()
 
     def OnTick(self, ws, message):
-        utcTime = struct.unpack("<q", message[8:8 + 8])[0] / 10**6
-        bid =  struct.unpack("<q", message[26:26 + 8])[0] / 10**8
-        bidq =  struct.unpack("<q", message[34:34 + 8])[0] / 10**8
-        ask =  struct.unpack("<q", message[42:42 + 8])[0] / 10**8
-        askq =  struct.unpack("<q", message[50:50 + 8])[0] / 10**8
         symbol = message[59:59 + message[58]].decode('utf-8')
-
-        df = self.dfPairs
+        utcTime = struct.unpack("<q", message[8:8 + 8])[0] / 10**6
+        # bid =  struct.unpack("<q", message[26:26 + 8])[0] / 10**8
+        # bidq =  struct.unpack("<q", message[34:34 + 8])[0] / 10**8
+        # ask =  struct.unpack("<q", message[42:42 + 8])[0] / 10**8
+        # askq =  struct.unpack("<q", message[50:50 + 8])[0] / 10**8
         
-        df.loc[df['pair1'] == symbol, ['ask1', 'askq1', 'bid1', 'bidq1']] = ask, askq, bid, bidq
-        df.loc[df['pair2'] == symbol, ['ask2', 'askq2', 'bid2', 'bidq2']] = ask, askq, bid, bidq
-        df.loc[df['pair3'] == symbol, ['ask3', 'askq3', 'bid3', 'bidq3']] = ask, askq, bid, bidq
-
-        self.environment.SetPriceStatus()            
-
         if(symbol == "BTCUSDC"):
             print(str(time.time() - utcTime))
+            #print(ask)
+        
+        # df = self.dfPairs
+        
+        # df.loc[df['pair1'] == symbol, ['ask1', 'askq1', 'bid1', 'bidq1']] = ask, askq, bid, bidq
+        # df.loc[df['pair2'] == symbol, ['ask2', 'askq2', 'bid2', 'bidq2']] = ask, askq, bid, bidq
+        # df.loc[df['pair3'] == symbol, ['ask3', 'askq3', 'bid3', 'bidq3']] = ask, askq, bid, bidq
+
+        # self.environment.SetPriceStatus()            
+
 
     def OnError(self, error, c):
         threading.Thread(target = self.RunSocket).start()

@@ -79,3 +79,9 @@ class TickerSymbolAdds():
         
         #SAND
         self.tickerStream.addTrianglePair("SANDUSDC","SANDBTC", "BTCUSDC","USDC", "SAND","BTC", 0.0007125, 0.00075, 0.0007125)
+
+    def AddSingleSymbol(self):
+        self.tickerStream.addTrianglePair("BTCUSDC", "BTCUSDC", "BTCUSDC","USDC", "ETH", "BTC", 0.0007125, 0.00075, 0.0071250)
+
+    def AddTriangle(self):
+        self.tickerStream.addTrianglePair("ETHUSDC", "ETHBTC", "BTCUSDC","USDC", "ETH", "BTC", 0.0007125, 0.00075, 0.0071250)

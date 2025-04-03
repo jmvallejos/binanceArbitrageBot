@@ -24,7 +24,10 @@ class Environment:
         self.socketUrl = 'wss://stream.binance.com:9443'
 
     def GetLongUtcTimeStamp(self):
-        return int((time.time() + self.offsetTimeInSeconds) * 1000) 
+        return int((time.time() + self.offsetTimeInSeconds) * 1000)
+
+    def GetUtcTimeStampFormatted(self):
+        return datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H:%M:%S.%f") 
 
     def GetTimeToLog(self):
         fecha_legible = datetime.datetime.now()

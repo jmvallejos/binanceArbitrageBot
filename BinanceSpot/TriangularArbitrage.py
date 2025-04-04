@@ -3,10 +3,10 @@ import time
 import numpy as np
 
 class TriangularArbitrage():
-    def __init__(self, environment, dfPairs, listPrices, marketOperator, accountStream, symbolBaseCurrency, gainExpected):
+    def __init__(self, environment, triangularPairs, listPrices, marketOperator, accountStream, symbolBaseCurrency, gainExpected):
         super().__init__()
         self.environment = environment
-        self.dfPairs = dfPairs
+        self.triangularPairs = triangularPairs
         self.listPrices = listPrices
         self.marketOperator = marketOperator
         self.accountStream = accountStream
@@ -35,16 +35,13 @@ class TriangularArbitrage():
                 continue
 
     def Arbitrage(self):
-        self.FreezePrice(self.dfPairs)
-
-        self.CalculateDirectGain()
-        self.CalculateIndirectGain()
-
-        maxDirectGainIndex = self.dfPairs['gainDirect'].idxmax()
-        maxDirectGainRecord = self.dfPairs.loc[maxDirectGainIndex]
-
-        maxIndirectGainIndex = self.dfPairs['gainIndirect'].idxmax()
-        maxIndirectGainRecord = self.dfPairs.loc[maxIndirectGainIndex]
+        for triangular in self.triangularPairs:    
+            self.FreezePrice(triangular)
+            self.CalculateDirectGain(triangular)
+            self.CalculateIndirectGain(triangular)
+        
+        maxDirectGainRecord = max(self.triangularPairs, key=lambda x: x['gainDirect'])
+        maxIndirectGainRecord = max(self.triangularPairs, key=lambda x: x['gainIndirect'])
         
         self.LogExecutingArbitrage(maxDirectGainRecord["gainDirect"], maxIndirectGainRecord["gainIndirect"])
 
@@ -75,19 +72,24 @@ class TriangularArbitrage():
             # self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
             return
 
-    def CalculateDirectGain(self):
-        df = self.dfPairs
-        df["firstStepDirect"] = self.Round(self.baseCurrencyBalance / df["ask1"], df["precisionLote1"])
-        df["initialCapitalDirect"] = df["firstStepDirect"] * df["ask1"]
+    def CalculateDirectGain(self, tr):
+        tr["firstStepDirect"] = self.Round(self.baseCurrencyBalance / tr["ask1"], tr["precisionLote1"])
+        tr["initialCapitalDirect"] = tr["firstStepDirect"] * tr["ask1"]
 
-        self.DirectGainTwoSteps(df, df["firstStepDirect"], df["initialCapitalDirect"])    
+        tr["secondStepDirect"] = self.Round(tr["firstStepDirect"], tr["precisionLote2"])  * tr["bid2"]
+        tr["secondStepDirect"] = self.Round(tr["secondStepDirect"], tr["precisionLote3"])  
+        tr["thirdStepDirect"] = tr["secondStepDirect"] * tr["bid3"] 
 
-    def CalculateIndirectGain(self):
-        df = self.dfPairs
-        df["firstStepIndirect"] = self.Round(self.baseCurrencyBalance / df["ask3"], df["precisionLote3"]) 
-        df["initialCapitalIndirect"] = df["firstStepIndirect"] * df["ask3"]
+        tr["gainDirect"] = tr["thirdStepDirect"] - tr["initialCapitalDirect"]    
 
-        self.IndirectGainTwoSteps(df, df["firstStepIndirect"], df["initialCapitalDirect"])
+    def CalculateIndirectGain(self, tr):
+        tr["firstStepIndirect"] = self.Round(self.baseCurrencyBalance / tr["ask3"], tr["precisionLote3"]) 
+        tr["initialCapitalIndirect"] = tr["firstStepIndirect"] * tr["ask3"]
+
+        tr["secondStepIndirect"] = self.Round(tr["firstStepIndirect"] / tr["ask2"], tr["precisionLote2"])         
+        tr["thirdStepIndirect"] = self.Round(tr["secondStepIndirect"], tr["precisionLote1"]) * tr["bid1"]                
+        
+        tr["gainIndirect"] = tr["thirdStepIndirect"] - tr["initialCapitalDirect"]
 
     def DirectGainTwoSteps(self, df, firstStep, initialCapital):
         if df.empty:
@@ -268,10 +270,10 @@ class TriangularArbitrage():
                 self.environment.Log("Invertido: " + str(self.reprocessGain))
                 self.lastLogExecutingTwoStepArbitrage = currentTime
 
-    def FreezePrice(self, df):
-        df["ask1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['ask'])
-        df["bid1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['bid'])
-        df["ask2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['ask'])
-        df["bid2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['bid'])
-        df["ask3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['ask'])
-        df["bid3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['bid'])
+    def FreezePrice(self, triangular):
+        triangular["ask1"] = self.listPrices[triangular["pair1"]]["ask"]
+        triangular["bid1"] = self.listPrices[triangular["pair1"]]["bid"]
+        triangular["ask2"] = self.listPrices[triangular["pair2"]]["ask"]
+        triangular["bid2"] = self.listPrices[triangular["pair2"]]["bid"]
+        triangular["ask3"] = self.listPrices[triangular["pair3"]]["ask"]
+        triangular["bid3"] = self.listPrices[triangular["pair3"]]["bid"]

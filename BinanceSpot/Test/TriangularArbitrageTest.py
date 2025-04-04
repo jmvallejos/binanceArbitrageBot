@@ -21,7 +21,7 @@ class TriangularArbitrageTest():
         marketOperator = MarketOperator(environment)
         accountData = AccountStream(environment, "USDC", marketOperator)
 
-        arbitrage = TriangularArbitrage(environment, tickerStream.dfPairs, tickerStream.listPrices, 
+        arbitrage = TriangularArbitrage(environment, tickerStream.triangularPairs, tickerStream.listPrices, 
                                         marketOperator, accountData, "USDC", 0.1)
         
         thereIsPrice = False

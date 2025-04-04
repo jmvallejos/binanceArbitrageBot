@@ -75,7 +75,7 @@ class TickerSymbolAdds():
 
         #RUNE
         #self.tickerStream.addTrianglePair("RUNEUSDC","RUNEETH", "ETHUSDC","USDC", "RUNE","ETH", 0.0007125, 0.00075, 0.0007125)
-        self.tickerStream.addTrianglePair("RUNEUSDC","RUNEBTC", "BTCUSDC","USDC", "RUNE","BTC", 0.0007125, 0.00075, 0.0007125)
+        #self.tickerStream.addTrianglePair("RUNEUSDC","RUNEBTC", "BTCUSDC","USDC", "RUNE","BTC", 0.0007125, 0.00075, 0.0007125)
         
         #SAND
         self.tickerStream.addTrianglePair("SANDUSDC","SANDBTC", "BTCUSDC","USDC", "SAND","BTC", 0.0007125, 0.00075, 0.0007125)

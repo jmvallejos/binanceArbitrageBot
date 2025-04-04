@@ -13,42 +13,37 @@ class TickerStreamSbe():
         self.environment = environment
         self.lastLogErrorCompleteTickSize = 0
         self.listPrices = {}
-        self.dfPairs = pd.DataFrame(columns=[
-            'pair1', 'pair2', 'pair3', 
-            'coin1', 'coin2', 'coin3',
-            'commi1', 'commi2','commi3', 
-            'precisionLote1', 'precisionLote2','precisionLote3'])
+        self.triangularPairs = []
 
     def addTrianglePair(self, pair1, pair2, pair3, coin1, coin2, coin3, 
                         commi1, commi2, commi3):
         
-        countRecords = self.dfPairs.shape[0]
-        self.dfPairs = pd.concat([self.dfPairs, pd.DataFrame(columns=self.dfPairs.columns)], ignore_index=True)
-
         self.listPrices[pair1] = {}
         self.listPrices[pair2] = {}
         self.listPrices[pair3] = {}
         
-        self.dfPairs.at[countRecords,"pair1"] = pair1
-        self.dfPairs.at[countRecords,"pair2"] = pair2
-        self.dfPairs.at[countRecords,"pair3"] = pair3
-        self.dfPairs.at[countRecords,"coin1"] = coin1
-        self.dfPairs.at[countRecords,"coin2"] = coin2
-        self.dfPairs.at[countRecords,"coin3"] = coin3
-        self.dfPairs.at[countRecords,"commi1"] = commi1
-        self.dfPairs.at[countRecords,"commi2"] = commi2
-        self.dfPairs.at[countRecords,"commi3"] = commi3
+        triangularPair = {}
+        triangularPair["pair1"] = pair1
+        triangularPair["pair2"] = pair2
+        triangularPair["pair3"] = pair3
+        triangularPair["coin1"] = coin1
+        triangularPair["coin2"] = coin2
+        triangularPair["coin3"] = coin3
+        triangularPair["commi1"] = commi1
+        triangularPair["commi2"] = commi2
+        triangularPair["commi3"] = commi3
+        triangularPair["precisionLote1"] = 0
+        triangularPair["precisionLote2"] = 0
+        triangularPair["precisionLote3"] = 0
+
+        self.triangularPairs.append(triangularPair)
 
     def InitConnection(self):
         self.environment.Log("Se inicia el stream de precios")
         self.TryCompletePrecisionLote()
         url = "wss://stream-sbe.binance.com/stream?streams="
 
-        pairs = pd.Series(self.dfPairs['pair1'].tolist() 
-                          + self.dfPairs['pair2'].tolist() 
-                          + self.dfPairs['pair3'].tolist()).unique()
-
-        for symbol in list(pairs):
+        for symbol in self.listPrices.keys():
             url = url + symbol.lower() + '@bestBidAsk/'
         self.url = url[:-1]
 
@@ -98,11 +93,7 @@ class TickerStreamSbe():
         url = self.environment.apiUrl
         url += "/api/v3/exchangeInfo?symbols="
 
-        pairs = pd.Series(self.dfPairs['pair1'].tolist() 
-                          + self.dfPairs['pair2'].tolist() 
-                          + self.dfPairs['pair3'].tolist()).unique()
-
-        url += json.dumps(list(pairs))
+        url += json.dumps(list(self.listPrices.keys()))
         url = url.replace('"', '%22')
         url = url.replace(' ', '')
 
@@ -120,8 +111,8 @@ class TickerStreamSbe():
             if("." in loteSize):
                 precision = len(loteSize.split(".")[1])
 
-            self.dfPairs.loc[self.dfPairs['pair1'] == symbol, 'precisionLote1'] = 10 ** precision
-            self.dfPairs.loc[self.dfPairs['pair2'] == symbol, 'precisionLote2'] = 10 ** precision
-            self.dfPairs.loc[self.dfPairs['pair3'] == symbol, 'precisionLote3'] = 10 ** precision
-
+            self.triangularPairs
+            [triangularPair.update({'precisionLote1': 10 ** precision}) for triangularPair in self.triangularPairs if triangularPair['pair1'] == symbol]
+            [triangularPair.update({'precisionLote2': 10 ** precision}) for triangularPair in self.triangularPairs if triangularPair['pair2'] == symbol]
+            [triangularPair.update({'precisionLote3': 10 ** precision}) for triangularPair in self.triangularPairs if triangularPair['pair3'] == symbol]
     

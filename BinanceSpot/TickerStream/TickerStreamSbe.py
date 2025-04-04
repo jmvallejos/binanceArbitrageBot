@@ -17,8 +17,7 @@ class TickerStreamSbe():
             'pair1', 'pair2', 'pair3', 
             'coin1', 'coin2', 'coin3',
             'commi1', 'commi2','commi3', 
-            'precisionLote1', 'precisionLote2','precisionLote3',
-            'price1', 'price2', 'price3'])
+            'precisionLote1', 'precisionLote2','precisionLote3'])
 
     def addTrianglePair(self, pair1, pair2, pair3, coin1, coin2, coin3, 
                         commi1, commi2, commi3):
@@ -26,11 +25,10 @@ class TickerStreamSbe():
         countRecords = self.dfPairs.shape[0]
         self.dfPairs = pd.concat([self.dfPairs, pd.DataFrame(columns=self.dfPairs.columns)], ignore_index=True)
 
-        self.listPrices[pair1] = {"bid":0.00, "ask":0.00}
-        self.listPrices[pair2] = {"bid":0.00, "ask":0.00}
-        self.listPrices[pair3] = {"bid":0.00, "ask":0.00}
+        self.listPrices[pair1] = {}
+        self.listPrices[pair2] = {}
+        self.listPrices[pair3] = {}
         
-
         self.dfPairs.at[countRecords,"pair1"] = pair1
         self.dfPairs.at[countRecords,"pair2"] = pair2
         self.dfPairs.at[countRecords,"pair3"] = pair3
@@ -40,9 +38,6 @@ class TickerStreamSbe():
         self.dfPairs.at[countRecords,"commi1"] = commi1
         self.dfPairs.at[countRecords,"commi2"] = commi2
         self.dfPairs.at[countRecords,"commi3"] = commi3
-        self.dfPairs.at[countRecords,"price1"] = self.listPrices[pair1]
-        self.dfPairs.at[countRecords,"price2"] = self.listPrices[pair2]
-        self.dfPairs.at[countRecords,"price3"] = self.listPrices[pair3]
 
     def InitConnection(self):
         self.environment.Log("Se inicia el stream de precios")
@@ -69,10 +64,10 @@ class TickerStreamSbe():
     def OnTick(self, ws, message):
         symbol = message[59:59 + message[58]].decode('utf-8')
         
-        self.listPrices[symbol]["bid"] = struct.unpack("<q", message[26:26 + 8])[0] / 10**8
-        self.listPrices[symbol]["ask"] = struct.unpack("<q", message[42:42 + 8])[0] / 10**8
-
-        
+        self.listPrices[symbol] = {
+            "bid": struct.unpack("<q", message[26:26 + 8])[0] / 10**8,
+            "ask": struct.unpack("<q", message[42:42 + 8])[0] / 10**8,
+        }
         self.environment.SetPriceStatus()
         
         # utcTime = struct.unpack("<q", message[8:8 + 8])[0] / 10**6

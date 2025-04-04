@@ -269,9 +269,9 @@ class TriangularArbitrage():
                 self.lastLogExecutingTwoStepArbitrage = currentTime
 
     def FreezePrice(self, df):
-        df["ask1"] = df['price1'].apply(lambda x: x['ask'])
-        df["bid1"] = df["price1"].apply(lambda x: x["bid"])
-        df["ask2"] = df["price2"].apply(lambda x: x["ask"])
-        df["bid2"] = df["price2"].apply(lambda x: x["bid"])
-        df["ask3"] = df["price3"].apply(lambda x: x["ask"])
-        df["bid3"] = df["price3"].apply(lambda x: x["bid"])
+        df["ask1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['bid'])
+        df["ask2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['bid'])
+        df["ask3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['bid'])

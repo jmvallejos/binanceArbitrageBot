@@ -15,7 +15,7 @@ class TriangularArbitrageTest():
         environment.SetProdValues()
 
         tickerStream = TickerStreamSbe(environment)
-        TickerSymbolAdds(tickerStream).AddSymbols()
+        TickerSymbolAdds(tickerStream).AddSingleSymbol()
         tickerStream.InitConnection()
 
         marketOperator = MarketOperator(environment)

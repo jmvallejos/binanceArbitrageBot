@@ -3,10 +3,11 @@ import time
 import numpy as np
 
 class TriangularArbitrage():
-    def __init__(self, environment, dfPairs, marketOperator, accountStream, symbolBaseCurrency, gainExpected):
+    def __init__(self, environment, dfPairs, listPrices, marketOperator, accountStream, symbolBaseCurrency, gainExpected):
         super().__init__()
         self.environment = environment
         self.dfPairs = dfPairs
+        self.listPrices = listPrices
         self.marketOperator = marketOperator
         self.accountStream = accountStream
         self.symbolBaseCurrency = symbolBaseCurrency
@@ -26,15 +27,10 @@ class TriangularArbitrage():
                 if(not self.CheckPriceStreamIsWorking()):
                     continue
                 
-                #initTime = self.environment.GetLongUtcTimeStamp()
-                
+                initTime = time.time()
                 self.Arbitrage()
+                print(time.time() - initTime)
                 
-                # currentTime = self.environment.GetLongUtcTimeStamp()
-                # if(currentTime - self.lastTimeLogTimerArbitrage > 1000):
-                #     result = currentTime - initTime
-                #     print(result)
-                #     self.lastTimeLogTimerArbitrage = currentTime
             except:
                 continue
 
@@ -56,39 +52,40 @@ class TriangularArbitrage():
         self.CalculateIndirectGainWithCommission(True, maxIndirectGainRecord)
 
         if(maxDirectGainRecord["gainDirect"] >= self.gainExpected and maxDirectGainRecord["gainDirect"] >= maxIndirectGainRecord["gainIndirect"]):
-            response = self.marketOperator.DirectOperation(maxDirectGainRecord)
-            if(response["coinToReProcess"] != ""):
-                self.coinToReprocess = response["coinToReProcess"]
-                self.reprocessGain = response["investedCapital"] 
-                self.ReprocessCoin()
+            # response = self.marketOperator.DirectOperation(maxDirectGainRecord)
+            # if(response["coinToReProcess"] != ""):
+            #     self.coinToReprocess = response["coinToReProcess"]
+            #     self.reprocessGain = response["investedCapital"] 
+            #     self.ReprocessCoin()
             
-            self.accountStream.GetWalletBalance()
-            self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
-            self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
+            # self.accountStream.GetWalletBalance()
+            # self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
+            # self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
             return
 
         if(maxIndirectGainRecord["gainIndirect"] >= self.gainExpected and maxIndirectGainRecord["gainIndirect"] > maxDirectGainRecord["gainDirect"]):
-            response = self.marketOperator.IndirectOperation(maxIndirectGainRecord)
-            if(response["coinToReProcess"] != ""):
-                self.coinToReprocess = response["coinToReProcess"]
-                self.reprocessGain = response["investedCapital"] 
-                self.ReprocessCoin()
+            # response = self.marketOperator.IndirectOperation(maxIndirectGainRecord)
+            # if(response["coinToReProcess"] != ""):
+            #     self.coinToReprocess = response["coinToReProcess"]
+            #     self.reprocessGain = response["investedCapital"] 
+            #     self.ReprocessCoin()
             
-            self.accountStream.GetWalletBalance()
-            self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
-            self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
+            # self.accountStream.GetWalletBalance()
+            # self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
+            # self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
+            return
 
     def CalculateDirectGain(self):
         df = self.dfPairs
-        df["firstStepDirect"] = self.Round(self.baseCurrencyBalance / df["freezeAsk1"], df["precisionLote1"])
-        df["initialCapitalDirect"] = df["firstStepDirect"] * df["freezeAsk1"]
+        df["firstStepDirect"] = self.Round(self.baseCurrencyBalance / df["ask1"], df["precisionLote1"])
+        df["initialCapitalDirect"] = df["firstStepDirect"] * df["ask1"]
 
         self.DirectGainTwoSteps(df, df["firstStepDirect"], df["initialCapitalDirect"])    
 
     def CalculateIndirectGain(self):
         df = self.dfPairs
-        df["firstStepIndirect"] = self.Round(self.baseCurrencyBalance / df["freezeAsk3"], df["precisionLote3"]) 
-        df["initialCapitalIndirect"] = df["firstStepIndirect"] * df["freezeAsk3"]
+        df["firstStepIndirect"] = self.Round(self.baseCurrencyBalance / df["ask3"], df["precisionLote3"]) 
+        df["initialCapitalIndirect"] = df["firstStepIndirect"] * df["ask3"]
 
         self.IndirectGainTwoSteps(df, df["firstStepIndirect"], df["initialCapitalDirect"])
 
@@ -96,9 +93,9 @@ class TriangularArbitrage():
         if df.empty:
             return
 
-        df["secondStepDirect"] = self.Round(firstStep, df["precisionLote2"])  * df["freezeBid2"]
+        df["secondStepDirect"] = self.Round(firstStep, df["precisionLote2"])  * df["bid2"]
         df["secondStepDirect"] = self.Round(df["secondStepDirect"], df["precisionLote3"])  
-        df["thirdStepDirect"] = df["secondStepDirect"] * df["freezeBid3"] 
+        df["thirdStepDirect"] = df["secondStepDirect"] * df["bid3"] 
 
         df["gainDirect"] = df["thirdStepDirect"] - initialCapital 
         
@@ -106,29 +103,29 @@ class TriangularArbitrage():
         if df.empty:
             return
         
-        df["secondStepIndirect"] = self.Round(firstStep / df["freezeAsk2"], df["precisionLote2"])         
-        df["thirdStepIndirect"] = self.Round(df["secondStepIndirect"], df["precisionLote1"]) * df["freezeBid1"]                
+        df["secondStepIndirect"] = self.Round(firstStep / df["ask2"], df["precisionLote2"])         
+        df["thirdStepIndirect"] = self.Round(df["secondStepIndirect"], df["precisionLote1"]) * df["bid1"]                
         
         df["gainIndirect"] = df["thirdStepIndirect"] - initialCapital
 
     def CalculateDirectGainWithCommission(self, isFirstStepCalculated, row):
-        row["commiSecondStepDirect"] = row["secondStepDirect"] * row["commi2"] * row["freezeBid3"]  
+        row["commiSecondStepDirect"] = row["secondStepDirect"] * row["commi2"] * row["bid3"]  
         row["commiThirdStepDirect"] = row["thirdStepDirect"] * row["commi3"]
 
         row["gainDirect"] -= (row["commiSecondStepDirect"] + row["commiThirdStepDirect"]) 
 
         if(isFirstStepCalculated):
-            row["commiFirstStepDirect"] = row["firstStepDirect"] * row["commi1"] * row["freezeBid1"]
+            row["commiFirstStepDirect"] = row["firstStepDirect"] * row["commi1"] * row["bid1"]
             row["gainDirect"] -= row["commiFirstStepDirect"]
     
     def CalculateIndirectGainWithCommission(self, isFirstStepCalculated, row):
-        row["commiSecondStepIndirect"] = row["secondStepIndirect"] * row["commi2"] * row["freezeBid1"]
+        row["commiSecondStepIndirect"] = row["secondStepIndirect"] * row["commi2"] * row["bid1"]
         row["commiThirdStepIndirect"] = row["thirdStepIndirect"] * row["commi1"] 
 
         row["gainIndirect"] -= (row["commiSecondStepIndirect"] + row["commiThirdStepIndirect"])
 
         if(isFirstStepCalculated):
-            row["commiFirstStepIndirect"] = row["firstStepIndirect"] * row["commi3"] * row["freezeBid3"]
+            row["commiFirstStepIndirect"] = row["firstStepIndirect"] * row["commi3"] * row["bid3"]
             row["gainIndirect"] -= row["commiFirstStepIndirect"] 
         
     def ReprocessCoin(self):
@@ -272,9 +269,9 @@ class TriangularArbitrage():
                 self.lastLogExecutingTwoStepArbitrage = currentTime
 
     def FreezePrice(self, df):
-        df["freezeAsk1"] = df["ask1"]
-        df["freezeBid1"] = df["bid1"]
-        df["freezeAsk2"] = df["ask2"]
-        df["freezeBid2"] = df["bid2"]
-        df["freezeAsk3"] = df["ask3"]
-        df["freezeBid3"] = df["bid3"]
+        df["ask1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid1"] = df["pair1"].map(lambda pair: self.listPrices[pair]['bid'])
+        df["ask2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid2"] = df["pair2"].map(lambda pair: self.listPrices[pair]['bid'])
+        df["ask3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['ask'])
+        df["bid3"] = df["pair3"].map(lambda pair: self.listPrices[pair]['bid'])

@@ -12,13 +12,10 @@ class TickerStreamSbe():
         super().__init__()
         self.environment = environment
         self.lastLogErrorCompleteTickSize = 0
+        self.listPrices = {}
         self.dfPairs = pd.DataFrame(columns=[
             'pair1', 'pair2', 'pair3', 
             'coin1', 'coin2', 'coin3',
-            'ask1', 'ask2', 'ask3',
-            'askq1', 'askq2', 'askq3',
-            'bid1', 'bid2', 'bid3',
-            'bid1q', 'bid2q', 'bid3q', 
             'commi1', 'commi2','commi3', 
             'precisionLote1', 'precisionLote2','precisionLote3',
             "ExpectedResult"])
@@ -28,6 +25,11 @@ class TickerStreamSbe():
         
         countRecords = self.dfPairs.shape[0]
         self.dfPairs = pd.concat([self.dfPairs, pd.DataFrame(columns=self.dfPairs.columns)], ignore_index=True)
+
+        self.listPrices[pair1] = {}
+        self.listPrices[pair2] = {}
+        self.listPrices[pair3] = {}
+
 
         self.dfPairs.at[countRecords,"pair1"] = pair1
         self.dfPairs.at[countRecords,"pair2"] = pair2
@@ -63,24 +65,19 @@ class TickerStreamSbe():
 
     def OnTick(self, ws, message):
         symbol = message[59:59 + message[58]].decode('utf-8')
-        utcTime = struct.unpack("<q", message[8:8 + 8])[0] / 10**6
-        # bid =  struct.unpack("<q", message[26:26 + 8])[0] / 10**8
-        # bidq =  struct.unpack("<q", message[34:34 + 8])[0] / 10**8
-        # ask =  struct.unpack("<q", message[42:42 + 8])[0] / 10**8
-        # askq =  struct.unpack("<q", message[50:50 + 8])[0] / 10**8
         
-        if(symbol == "BTCUSDC"):
-            print(str(time.time() - utcTime))
-            #print(ask)
+        self.listPrices[symbol] = {
+            "bid": struct.unpack("<q", message[26:26 + 8])[0] / 10**8,
+            "bidq": struct.unpack("<q", message[34:34 + 8])[0] / 10**8,
+            "ask": struct.unpack("<q", message[42:42 + 8])[0] / 10**8,
+            "askq": struct.unpack("<q", message[50:50 + 8])[0] / 10**8
+        }
         
-        # df = self.dfPairs
+        self.environment.SetPriceStatus()
         
-        # df.loc[df['pair1'] == symbol, ['ask1', 'askq1', 'bid1', 'bidq1']] = ask, askq, bid, bidq
-        # df.loc[df['pair2'] == symbol, ['ask2', 'askq2', 'bid2', 'bidq2']] = ask, askq, bid, bidq
-        # df.loc[df['pair3'] == symbol, ['ask3', 'askq3', 'bid3', 'bidq3']] = ask, askq, bid, bidq
-
-        # self.environment.SetPriceStatus()            
-
+        #utcTime = struct.unpack("<q", message[8:8 + 8])[0] / 10**6
+        #if(symbol == "BTCUSDC"):
+            #print(str(time.time() - utcTime))
 
     def OnError(self, error, c):
         threading.Thread(target = self.RunSocket).start()

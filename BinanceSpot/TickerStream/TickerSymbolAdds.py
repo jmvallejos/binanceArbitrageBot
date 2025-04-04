@@ -47,11 +47,11 @@ class TickerSymbolAdds():
         self.tickerStream.addTrianglePair("NEARUSDC","NEARBTC", "BTCUSDC","USDC", "NEAR","BTC", 0.0007125, 0.00075, 0.0007125 )
 
         #POL
-        self.tickerStream.addTrianglePair("POLUSDC","POLETH", "ETHUSDC","USDC", "POL","ETH", 0.0007125, 0.00075, 0.0007125 )
-        self.tickerStream.addTrianglePair("POLUSDC","POLBTC", "BTCUSDC","USDC", "POL","BTC", 0.0007125, 0.00075, 0.0007125 )
+        #self.tickerStream.addTrianglePair("POLUSDC","POLETH", "ETHUSDC","USDC", "POL","ETH", 0.0007125, 0.00075, 0.0007125 )
+        #self.tickerStream.addTrianglePair("POLUSDC","POLBTC", "BTCUSDC","USDC", "POL","BTC", 0.0007125, 0.00075, 0.0007125 )
 
         #FILL
-        self.tickerStream.addTrianglePair("FILUSDC","FILETH", "ETHUSDC","USDC", "FIL","ETH", 0.0007125, 0.00075, 0.0007125 )
+        #self.tickerStream.addTrianglePair("FILUSDC","FILETH", "ETHUSDC","USDC", "FIL","ETH", 0.0007125, 0.00075, 0.0007125 )
         self.tickerStream.addTrianglePair("FILUSDC","FILBTC", "BTCUSDC","USDC", "FIL","BTC", 0.0007125, 0.00075, 0.0007125 )
         #######
         
@@ -60,7 +60,7 @@ class TickerSymbolAdds():
         self.tickerStream.addTrianglePair("UNIUSDC","UNIBTC", "BTCUSDC","USDC", "UNI","BTC", 0.0007125, 0.00075, 0.0007125)
 
         #ATOM
-        self.tickerStream.addTrianglePair("ATOMUSDC","ATOMETH", "ETHUSDC","USDC", "ATOM","ETH", 0.0007125, 0.00075, 0.0007125)
+        #self.tickerStream.addTrianglePair("ATOMUSDC","ATOMETH", "ETHUSDC","USDC", "ATOM","ETH", 0.0007125, 0.00075, 0.0007125)
         self.tickerStream.addTrianglePair("ATOMUSDC","ATOMBTC", "BTCUSDC","USDC", "ATOM","BTC", 0.0007125, 0.00075, 0.0007125)
         
         #ALGO
@@ -74,7 +74,7 @@ class TickerSymbolAdds():
         self.tickerStream.addTrianglePair("CAKEUSDC","CAKEBTC", "BTCUSDC","USDC", "CAKE","BTC", 0.0007125, 0.00075, 0.0007125)
 
         #RUNE
-        self.tickerStream.addTrianglePair("RUNEUSDC","RUNEETH", "ETHUSDC","USDC", "RUNE","ETH", 0.0007125, 0.00075, 0.0007125)
+        #self.tickerStream.addTrianglePair("RUNEUSDC","RUNEETH", "ETHUSDC","USDC", "RUNE","ETH", 0.0007125, 0.00075, 0.0007125)
         self.tickerStream.addTrianglePair("RUNEUSDC","RUNEBTC", "BTCUSDC","USDC", "RUNE","BTC", 0.0007125, 0.00075, 0.0007125)
         
         #SAND

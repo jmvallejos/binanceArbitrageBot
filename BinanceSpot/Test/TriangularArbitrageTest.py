@@ -1,7 +1,7 @@
 from BinanceSpot.AccountStream import AccountStream
 from BinanceSpot.TriangularArbitrage import TriangularArbitrage
 from BinanceSpot.Environment import Environment
-from BinanceSpot.MarketOperator import MarketOperator
+from BinanceSpot.MarketOperator.MarketOperatorApi import MarketOperatorApi
 from BinanceSpot.TickerStream.TickerStreamSbe import TickerStreamSbe
 from BinanceSpot.TickerStream.TickerSymbolAdds import TickerSymbolAdds
 
@@ -18,7 +18,7 @@ class TriangularArbitrageTest():
         TickerSymbolAdds(tickerStream).AddSymbols()
         tickerStream.InitConnection()
 
-        marketOperator = MarketOperator(environment)
+        marketOperator = MarketOperatorApi(environment)
         accountData = AccountStream(environment, "USDC", marketOperator)
 
         arbitrage = TriangularArbitrage(environment, tickerStream.triangularPairs, tickerStream.listPrices, 

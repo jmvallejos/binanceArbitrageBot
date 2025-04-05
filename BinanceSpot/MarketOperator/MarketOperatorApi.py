@@ -1,15 +1,20 @@
 import hashlib
 import hmac
 import json
+import time
 
 import requests
 from decimal import Decimal, ROUND_FLOOR
 
 
-class MarketOperator():
+class MarketOperatorApi():
     def __init__(self, environment):
         super().__init__()
         self.environment = environment
+        self.headers = {
+            'X-MBX-APIKEY': self.environment.apiKey
+        }
+        self.urlOrders = self.environment.apiUrl + '/api/v3/order'
         
     def DirectOperation(self, pairTriangle):
         orderFirstStep = {
@@ -280,7 +285,6 @@ class MarketOperator():
         return 
 
     def ExecuteOrder(self, order):
-        endpoint = '/api/v3/order'
         order["timestamp"] = self.environment.GetLongUtcTimeStamp()
         if("price" in order): 
             order["price"] = f"{order["price"]:.8f}".rstrip('0').rstrip('.')
@@ -288,12 +292,10 @@ class MarketOperator():
         query_string = '&'.join([f"{key}={value}" for key, value in order.items()])
         order['signature'] = hmac.new(self.environment.secretKey.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
 
+        initTime = time.time()
+        response = requests.post(self.urlOrders, headers=self.headers, params=order)
+        print(time.time() - initTime)
 
-        headers = {
-            'X-MBX-APIKEY': self.environment.apiKey
-        }
-
-        response = requests.post(self.environment.apiUrl + endpoint, headers=headers, params=order)
         data = json.loads(response.text)
         if("status" not in data or data["status"] != "FILLED" and data["status"] != "EXPIRED"):
             print(order)

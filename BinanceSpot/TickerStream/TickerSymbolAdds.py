@@ -85,3 +85,6 @@ class TickerSymbolAdds():
 
     def AddTriangle(self):
         self.tickerStream.addTrianglePair("ETHUSDC", "ETHBTC", "BTCUSDC","USDC", "ETH", "BTC", 0.0007125, 0.00075, 0.0071250)
+
+    def AddStableCoins(self):
+        self.tickerStream.addTrianglePair("USDCUSDT", "USDCUSDT", "USDCUSDT","USDC", "USDT", "USDC", 0, 0, 0)

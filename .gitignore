@@ -1,8 +1,8 @@
-   # Ignorar archivos de base de datos SQLite
-   *.sqlite
+# Ignorar archivos de base de datos SQLite
+*.sqlite
 
-   # Ignorar archivos de índice de Visual Studio
-   *.vsidx
+# Ignorar archivos de índice de Visual Studio
+*.vsidx
 
-   # Ignorar archivos de bytecode de Python
-   *.pyc
+# Ignorar archivos de bytecode de Python
+*.pyc

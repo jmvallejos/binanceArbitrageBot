@@ -1,7 +1,7 @@
 from BinanceSpot.AccountStream import AccountStream
 from BinanceSpot.TickerStream.TickerStreamIndividualTick import TickerStreamIndividualTick
 from BinanceSpot.Environment import Environment
-from BinanceSpot.MarketOperator import MarketOperator
+from BinanceSpot.MarketOperator.MarketOperatorApi import MarketOperatorApi
 from BinanceSpot.TickerStream.TickerSymbolAdds import TickerSymbolAdds
 from BinanceSpot.TriangularArbitrage import TriangularArbitrage
 
@@ -19,7 +19,7 @@ class BinanceSpotTrader:
 
         stableCoin = "USDC"
 
-        marketOperator = MarketOperator(environment)
+        marketOperator = MarketOperatorApi(environment)
         accountStream = AccountStream(environment, stableCoin, marketOperator)
         
         thereIsPrice = False

@@ -1,4 +1,5 @@
 import datetime
+import math
 import time
 import numpy as np
 
@@ -29,7 +30,7 @@ class TriangularArbitrage():
                 
                 initTime = time.time()
                 self.Arbitrage()
-                print(time.time() - initTime)
+                print(f"{(time.time() - initTime):.8f}")
                 
             except:
                 continue
@@ -243,7 +244,7 @@ class TriangularArbitrage():
         
 
     def Round(self, num, decimals):
-        return np.floor(num * decimals) / decimals
+        return math.floor(num * decimals) / decimals
     
     def CheckPriceStreamIsWorking(self):
         priceIsWorking = self.environment.PriceStreamIsWorking()

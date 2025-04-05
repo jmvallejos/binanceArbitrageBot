@@ -46,31 +46,31 @@ class TriangularArbitrage():
         
         self.LogExecutingArbitrage(maxDirectGainRecord["gainDirect"], maxIndirectGainRecord["gainIndirect"])
 
-        self.CalculateDirectGainWithCommission(True, maxDirectGainRecord)
-        self.CalculateIndirectGainWithCommission(True, maxIndirectGainRecord)
+        self.CalculateDirectGainWithCommission(maxDirectGainRecord)
+        self.CalculateIndirectGainWithCommission(maxIndirectGainRecord)
 
         if(maxDirectGainRecord["gainDirect"] >= self.gainExpected and maxDirectGainRecord["gainDirect"] >= maxIndirectGainRecord["gainIndirect"]):
-            # response = self.marketOperator.DirectOperation(maxDirectGainRecord)
-            # if(response["coinToReProcess"] != ""):
-            #     self.coinToReprocess = response["coinToReProcess"]
-            #     self.reprocessGain = response["investedCapital"] 
-            #     self.ReprocessCoin()
+            response = self.marketOperator.DirectOperation(maxDirectGainRecord)
+            if(response["coinToReProcess"] != ""):
+                self.coinToReprocess = response["coinToReProcess"]
+                self.reprocessGain = response["investedCapital"] 
+                self.ReprocessCoin()
             
-            # self.accountStream.GetWalletBalance()
-            # self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
-            # self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
+            self.accountStream.GetWalletBalance()
+            self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
+            self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
             return
 
         if(maxIndirectGainRecord["gainIndirect"] >= self.gainExpected and maxIndirectGainRecord["gainIndirect"] > maxDirectGainRecord["gainDirect"]):
-            # response = self.marketOperator.IndirectOperation(maxIndirectGainRecord)
-            # if(response["coinToReProcess"] != ""):
-            #     self.coinToReprocess = response["coinToReProcess"]
-            #     self.reprocessGain = response["investedCapital"] 
-            #     self.ReprocessCoin()
+            response = self.marketOperator.IndirectOperation(maxIndirectGainRecord)
+            if(response["coinToReProcess"] != ""):
+                self.coinToReprocess = response["coinToReProcess"]
+                self.reprocessGain = response["investedCapital"] 
+                self.ReprocessCoin()
             
-            # self.accountStream.GetWalletBalance()
-            # self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
-            # self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
+            self.accountStream.GetWalletBalance()
+            self.baseCurrencyBalance = self.accountStream.WalletSpot[self.symbolBaseCurrency]
+            self.environment.Log("En cartera tras operation: " + str(self.baseCurrencyBalance))   
             return
 
     def CalculateDirectGain(self, tr):
@@ -92,44 +92,19 @@ class TriangularArbitrage():
         
         tr["gainIndirect"] = tr["thirdStepIndirect"] - tr["initialCapitalDirect"]
 
-    def DirectGainTwoSteps(self, df, firstStep, initialCapital):
-        if df.empty:
-            return
-
-        df["secondStepDirect"] = self.Round(firstStep, df["precisionLote2"])  * df["bid2"]
-        df["secondStepDirect"] = self.Round(df["secondStepDirect"], df["precisionLote3"])  
-        df["thirdStepDirect"] = df["secondStepDirect"] * df["bid3"] 
-
-        df["gainDirect"] = df["thirdStepDirect"] - initialCapital 
-        
-    def IndirectGainTwoSteps(self, df, firstStep, initialCapital):
-        if df.empty:
-            return
-        
-        df["secondStepIndirect"] = self.Round(firstStep / df["ask2"], df["precisionLote2"])         
-        df["thirdStepIndirect"] = self.Round(df["secondStepIndirect"], df["precisionLote1"]) * df["bid1"]                
-        
-        df["gainIndirect"] = df["thirdStepIndirect"] - initialCapital
-
-    def CalculateDirectGainWithCommission(self, isFirstStepCalculated, row):
+    def CalculateDirectGainWithCommission(self, row):
+        row["commiFirstStepDirect"] = row["firstStepDirect"] * row["commi1"] * row["bid1"]
         row["commiSecondStepDirect"] = row["secondStepDirect"] * row["commi2"] * row["bid3"]  
         row["commiThirdStepDirect"] = row["thirdStepDirect"] * row["commi3"]
 
-        row["gainDirect"] -= (row["commiSecondStepDirect"] + row["commiThirdStepDirect"]) 
-
-        if(isFirstStepCalculated):
-            row["commiFirstStepDirect"] = row["firstStepDirect"] * row["commi1"] * row["bid1"]
-            row["gainDirect"] -= row["commiFirstStepDirect"]
+        row["gainDirect"] -= (row["commiFirstStepDirect"] + row["commiSecondStepDirect"] + row["commiThirdStepDirect"]) 
     
-    def CalculateIndirectGainWithCommission(self, isFirstStepCalculated, row):
+    def CalculateIndirectGainWithCommission(self, row):
+        row["commiFirstStepIndirect"] = row["firstStepIndirect"] * row["commi3"] * row["bid3"]
         row["commiSecondStepIndirect"] = row["secondStepIndirect"] * row["commi2"] * row["bid1"]
         row["commiThirdStepIndirect"] = row["thirdStepIndirect"] * row["commi1"] 
 
-        row["gainIndirect"] -= (row["commiSecondStepIndirect"] + row["commiThirdStepIndirect"])
-
-        if(isFirstStepCalculated):
-            row["commiFirstStepIndirect"] = row["firstStepIndirect"] * row["commi3"] * row["bid3"]
-            row["gainIndirect"] -= row["commiFirstStepIndirect"] 
+        row["gainIndirect"] -= (row["commiFirstStepIndirect"] + row["commiSecondStepIndirect"] + row["commiThirdStepIndirect"])
         
     def ReprocessCoin(self):
         reprocessEnd = False
@@ -147,37 +122,26 @@ class TriangularArbitrage():
                 reprocessEnd = False
 
     def CalculateReprocess(self):
-        self.FreezePrice(self.dfPairs)
+        for triangular in self.triangularPairs:
+            self.FreezePrice(triangular)
 
         successSellStableCoin = self.SellToStableCoin()
         if(successSellStableCoin):
             return True
+
+        for triangular in self.triangularPairs:
+            self.DirectGainTwoSteps(triangular)
+            self.IndirectGainTwoSteps(triangular)    
+          
+        maxDirectGainRecord = max(self.triangularPairs, key=lambda x: x['gainDirect'])
+        maxIndirectGainRecord = max(self.triangularPairs, key=lambda x: x['gainIndirect'])
         
-        df = self.dfPairs
-        df["investedCapital"] = self.reprocessGain
-        dfDirect = df.loc[df['coin2'] == self.coinToReprocess]
-        dfIndirect = df.loc[df['coin3'] == self.coinToReprocess]
-
-        self.DirectGainTwoSteps(dfDirect, self.balanceCoinToReprocess, self.reprocessGain)
-        self.IndirectGainTwoSteps(dfIndirect, self.balanceCoinToReprocess, self.reprocessGain)
+        self.CalculateDirectGainWithCommissionTwoSteps(maxDirectGainRecord)
+        self.CalculateIndirectGainWithCommissionTwoSteps(maxIndirectGainRecord)
         
-        maxDirectGain = -100
-        if not dfDirect.empty:    
-            maxDirectGainIndex = dfDirect['gainDirect'].idxmax()
-            maxDirectGainRecord = dfDirect.loc[maxDirectGainIndex]
-            self.CalculateDirectGainWithCommission(False, maxDirectGainRecord)
-            maxDirectGain = maxDirectGainRecord["gainDirect"]
+        self.LogExecutingTwoStepArbitrage(maxDirectGainRecord["gainDirect"], maxIndirectGainRecord['gainIndirect'])
 
-        maxIndirectGain = -100
-        if not dfIndirect.empty:
-            maxIndirectGainIndex = dfIndirect['gainIndirect'].idxmax()
-            maxIndirectGainRecord = dfIndirect.loc[maxIndirectGainIndex]
-            self.CalculateIndirectGainWithCommission(False, maxIndirectGainRecord)
-            maxIndirectGain = maxIndirectGainRecord['gainIndirect']
-
-        self.LogExecutingTwoStepArbitrage(maxDirectGain, maxIndirectGain)
-
-        if(maxDirectGain >= self.gainExpected and maxDirectGain >= maxIndirectGain):
+        if(maxDirectGainRecord["gainDirect"] >= self.gainExpected and maxDirectGainRecord["gainDirect"] >= maxIndirectGainRecord['gainIndirect']):
             self.balanceCoinToReprocess = self.Round(self.balanceCoinToReprocess, maxDirectGainRecord["precisionLote2"])
             response = self.marketOperator.DirectOperationTwoSteps(maxDirectGainRecord, self.balanceCoinToReprocess)
             if(response["status"] == "SUCCESS"):
@@ -194,7 +158,7 @@ class TriangularArbitrage():
 
             return False
 
-        if(maxIndirectGainRecord["gainIndirect"] >= self.gainExpected and maxIndirectGain > maxDirectGain):
+        if(maxIndirectGainRecord["gainIndirect"] >= self.gainExpected and maxIndirectGainRecord["gainIndirect"] > maxDirectGainRecord["gainDirect"]):
             self.balanceCoinToReprocess = self.Round(self.balanceCoinToReprocess, maxIndirectGainRecord["precisionLote3"])
             response = self.marketOperator.IndirectOperationTwoStep(maxIndirectGainRecord)
             if(response["status"] == "SUCCESS"):
@@ -211,37 +175,59 @@ class TriangularArbitrage():
             
             return False
 
+    def DirectGainTwoSteps(self, tr):
+        tr["secondStepDirect"] = self.Round(self.balanceCoinToReprocess, tr["precisionLote2"])  * tr["bid2"]
+        tr["secondStepDirect"] = self.Round(tr["secondStepDirect"], tr["precisionLote3"])  
+        tr["thirdStepDirect"] = tr["secondStepDirect"] * tr["bid3"] 
+
+        tr["gainDirect"] = tr["thirdStepDirect"] - self.reprocessGain 
+        
+    def IndirectGainTwoSteps(self, tr):
+        tr["secondStepIndirect"] = self.Round(self.balanceCoinToReprocess / tr["ask2"], tr["precisionLote2"])         
+        tr["thirdStepIndirect"] = self.Round(tr["secondStepIndirect"], tr["precisionLote1"]) * tr["bid1"]                
+        
+        tr["gainIndirect"] = tr["thirdStepIndirect"] - self.reprocessGain
+
+    def CalculateDirectGainWithCommissionTwoSteps(self, row):
+        row["commiSecondStepDirect"] = row["secondStepDirect"] * row["commi2"] * row["bid3"]  
+        row["commiThirdStepDirect"] = row["thirdStepDirect"] * row["commi3"]
+
+        row["gainDirect"] -= (row["commiSecondStepDirect"] + row["commiThirdStepDirect"]) 
+    
+    def CalculateIndirectGainWithCommissionTwoSteps(self, row):
+        row["commiSecondStepIndirect"] = row["secondStepIndirect"] * row["commi2"] * row["bid1"]
+        row["commiThirdStepIndirect"] = row["thirdStepIndirect"] * row["commi1"] 
+
+        row["gainIndirect"] -= (row["commiSecondStepIndirect"] + row["commiThirdStepIndirect"])
+
+
     def SellToStableCoin(self):
-        df = self.dfPairs
-
-        dfDirect = df.loc[df['coin2'] == self.coinToReprocess]
-        index = dfDirect.first_valid_index()
-        bid = 0
+        symbol = ""
         precisionLoteSize = 0
+        bid = 0
 
-        if(index is None):
-            dfIndirect = df.loc[df['coin3'] == self.coinToReprocess]
-            index = dfIndirect.first_valid_index()
-            row = df.loc[index]
-            bid = row["bid3"]
-            precisionLoteSize = row["precisionLote3"]
-            symbol = row["pair3"]
+        direct = next((tr for tr in self.triangularPairs if tr['coin2'] == self.coinToReprocess), None)
+        if(direct is None):
+            indirect = next((tr for tr in self.triangularPairs if tr['coin3'] == self.coinToReprocess), None)
+            symbol = indirect["pair3"]
+            bid = indirect["bid3"]
+            precisionLoteSize = indirect["precisionLote3"]
+            commi = indirect["commi3"]
         else:
-            row = df.loc[index]
-            bid = row["bid1"]
-            precisionLoteSize = row["precisionLote1"]
-            symbol = row["pair1"]
+            symbol = direct["pair1"]
+            bid = direct["bid1"]
+            precisionLoteSize = direct["precisionLote1"]
+            commi = direct["commi1"]
 
         self.balanceCoinToReprocess = self.Round(self.balanceCoinToReprocess, precisionLoteSize)
         conversion = bid * self.balanceCoinToReprocess
-        commi = conversion * row["commi1"]
+        commi = conversion * commi
 
         if(conversion - commi >= self.reprocessGain + self.gainExpected):
             response = self.marketOperator.SellToStableCoin(symbol, self.balanceCoinToReprocess, bid, self.reprocessGain, commi)
             if(response["status"] == "SUCCESS"):
                 return True
-        return False
-        
+        return False 
 
     def Round(self, num, decimals):
         return math.floor(num * decimals) / decimals
